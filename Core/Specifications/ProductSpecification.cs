@@ -1,0 +1,40 @@
+using Core.Entities;
+
+namespace Core.Specifications
+{
+    public class ProductSpecification : BaseSpecification<Product>
+    {
+        // سازنده‌ی اول (فقط فیلتر برند و نوع)
+        public ProductSpecification(string? brand, string? type)
+            : base(x =>
+                (string.IsNullOrWhiteSpace(brand) || x.Brand == brand) &&
+                (string.IsNullOrWhiteSpace(type) || x.Type == type)
+            )
+        {
+            AddOrderBy(x => x.Name); // پیش‌فرض: مرتب‌سازی بر اساس نام
+        }
+
+        // سازنده‌ی دوم (همراه با مرتب‌سازی)
+        public ProductSpecification(string? brand, string? type, string? sort)
+            : base(x =>
+                (string.IsNullOrWhiteSpace(brand) || x.Brand == brand) &&
+                (string.IsNullOrWhiteSpace(type) || x.Type == type)
+            )
+        {
+            switch (sort)
+            {
+                case "priceAsc":
+                    AddOrderBy(x => x.Price);
+                    break;
+
+                case "priceDesc":
+                    AddOrderByDescending(x => x.Price);
+                    break;
+
+                default:
+                    AddOrderBy(x => x.Name);
+                    break;
+            }
+        }
+    }
+}

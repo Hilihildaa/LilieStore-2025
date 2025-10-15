@@ -1,0 +1,47 @@
+using Core.Entities;
+using Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Data
+{
+    public class SpecificationEvaluator<T> where T : BaseEntity
+    {
+        // برای Specification‌های معمولی
+        public static IQueryable<T> GetQuery(IQueryable<T> query, ISpecification<T> spec)
+        {
+            if (spec.Criteria != null)
+                query = query.Where(spec.Criteria);
+
+            if (spec.OrderBy != null)
+                query = query.OrderBy(spec.OrderBy);
+
+            if (spec.OrderByDescending != null)
+                query = query.OrderByDescending(spec.OrderByDescending);
+
+            if (spec.IsDistinct)
+                query = query.Distinct();
+
+            return query;
+        }
+
+        // برای Specification‌هایی که TResult دارند (مثلاً فقط Brand یا Type)
+        public static IQueryable<TResult> GetQuery<TResult>(IQueryable<T> query, ISpecification<T, TResult> spec)
+        {
+            if (spec.Criteria != null)
+                query = query.Where(spec.Criteria);
+
+            if (spec.OrderBy != null)
+                query = query.OrderBy(spec.OrderBy);
+
+            if (spec.OrderByDescending != null)
+                query = query.OrderByDescending(spec.OrderByDescending);
+
+            IQueryable<TResult> selectQuery = query.Select(spec.Select);
+
+            if (spec.IsDistinct)
+                selectQuery = selectQuery.Distinct();
+
+            return selectQuery;
+        }
+    }
+}
