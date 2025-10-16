@@ -3,21 +3,19 @@ using Core.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Core.Interfaces;
 using Core.Specifications;
+using API.RequestHelpers;
 
 namespace API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProductsController(IGenericRepository<Product> repo) : ControllerBase
+public class ProductsController(IGenericRepository<Product> repo) : BaseApiController
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts(string? brand, string? type, string? sort)
+    public async Task<ActionResult<Pagination<Product>>> GetProducts(
+        [FromQuery] ProductSpecParams specParams)
     {
-        var spec = new ProductSpecification(brand, type, sort);
+        var spec = new ProductSpecification(specParams);
 
-        var products = await repo.ListAsync(spec);
-
-        return Ok(products);
+        return await CreatePagedResult(repo, spec,specParams.PageIndex,specParams.PageSize) ;
     }
 
     [HttpGet("{id:int}")]
@@ -35,6 +33,7 @@ public class ProductsController(IGenericRepository<Product> repo) : ControllerBa
     public async Task<ActionResult<Product>> CreateProduct(Product product)
     {
         repo.Add(product);
+
         if (await repo.SaveAllAsync())
         {
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
@@ -64,7 +63,8 @@ public class ProductsController(IGenericRepository<Product> repo) : ControllerBa
     {
         var product = await repo.GetByIdAsync(id);
 
-        if (product == null) return NotFound();
+        if (product == null)
+            return NotFound();
 
         repo.Remove(product);
 
@@ -77,22 +77,22 @@ public class ProductsController(IGenericRepository<Product> repo) : ControllerBa
     }
 
     [HttpGet("brands")]
-    public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
+    public async Task<ActionResult<IReadOnlyList<object>>> GetBrands()
     {
         var spec = new BrandListSpecification();
         return Ok(await repo.ListAsync(spec));
     }
+
     [HttpGet("types")]
-    public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
+    public async Task<ActionResult<IReadOnlyList<object>>> GetTypes()
     {
         var spec = new TypeListSpecification();
         return Ok(await repo.ListAsync(spec));
     }
 
-
     private bool ProductExists(int id)
     {
         return repo.Exists(id);
     }
-
 }
+
