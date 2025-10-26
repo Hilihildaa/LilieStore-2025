@@ -1,1 +1,14 @@
-<h2 class = "text-3xl font-bold underline bg-red-500">Welcome to {{title}}</h2>
+<app-header></app-header>
+
+<router-outlet></router-outlet>
+
+
+<div class="container mt-6">
+  <h2 class="text-3xl font-bold underline">Welcome to LiliStore</h2>
+
+  <ul>
+    @for (product of products; track product.id) {
+    <li>{{ product.name }}</li>
+    }
+  </ul>
+</div>
